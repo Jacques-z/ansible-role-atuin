@@ -1,20 +1,20 @@
 ---
 
 - block:
-    - when: gitea_enabled | bool
+    - when: atuin_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
 
-    - when: gitea_enabled | bool
+    - when: atuin_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
   tags:
     - setup-all
-    - setup-gitea
+    - setup-atuin
     - install-all
-    - install-gitea
+    - install-atuin
 
 - block:
-    - when: not gitea_enabled | bool
+    - when: not atuin_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
   tags:
     - setup-all
-    - setup-gitea
+    - setup-atuin
