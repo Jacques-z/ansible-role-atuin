@@ -1,12 +1,27 @@
-# Gitea Ansible role
+# Atuin Ansible Role
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Gitea](https://gitea.io) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+[Atuin](https://atuin.sh) is a tool that lets you sync, search and backup your shell history across devices. This role helps you to set up Atuin:
 
-This role *implicitly* depends on:
+- with everything run in [Docker](https://www.docker.com/) containers
+- powered by the official Atuin container image, at ghcr.io/atuinsh/atuin:<LATEST TAGGED RELEASE>
 
-- [`com.devture.ansible.role.playbook_help`](https://github.com/devture/com.devture.ansible.role.playbook_help)
-- [`com.devture.ansible.role.systemd_docker_base`](https://github.com/devture/com.devture.ansible.role.systemd_docker_base)
 
-Check [defaults/main.yml](defaults/main.yml) for the full list of supported options.
+## Installing
 
-For an Ansible playbook which integrates this role and makes it easier to use, see the [mash-playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
+To configure and install Atuin on your own server(s), you should use a playbook like [Mother of all self-hosting](https://github.com/mother-of-all-self-hosting/mash-playbook) or write your own.
+# Configuring this role for your playbook
+
+```
+atuin_enabled: true
+atuin_hostname: 'example.org'
+
+atuin_db_host:
+
+atuin_db_name:
+atuin_db_user:
+atuin_db_password:
+```
+
+## Support
+
+- Github issues: Pas encore
