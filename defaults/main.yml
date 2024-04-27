@@ -1,4 +1,6 @@
 ---
+atuin_enabled: true
+atuin_identifier: atuin
 
 atuin_host: '0.0.0.0'
 
@@ -6,8 +8,46 @@ atuin_database_name: atuin
 atuin_database_username: atuin
 atuin_database_password: 'really-insecure'
 
-
 atuin_open_registration: 'true'
+
+atuin_systemd_required_services_list: "{{ atuin_systemd_required_services_list_default + atuin_systemd_required_services_list_auto + atuin_systemd_required_services_list_custom }}"
+atuin_systemd_required_services_list_default: ['docker.service']
+atuin_systemd_required_services_list_auto: []
+atuin_systemd_required_services_list_custom: []
+
+atuin_timeout_start_sec: 0
+
+atuin_uid: ''
+atuin_gid: ''
+
+# Modified from gotosocial, not sure if it works
+# Controls whether the atuin container exposes its HTTP port (as defined by `atuin_container_http_port`).
+#
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:8731"), or empty string to not expose.
+atuin_container_http_host_bind_port: 8888
+
+# The port number in the container
+atuin_container_http_port: 8888
+
+atuin_base_path: "/{{ atuin_identifier }}"
+atuin_config_path: "{{ atuin_base_path }}/config"
+atuin_data_path: "{{ atuin_base_path }}/data"
+atuin_env_path: "{{ atuin_config_path }}/env"
+
+atuin_version: 18.2.0
+
+atuin_container_image: "{{ atuin_container_image_registry_prefix }}atuinsh/atuin:{{ atuin_container_image_tag }}"
+atuin_container_image_registry_prefix: ghcr.io/
+atuin_container_image_tag: "{{ atuin_version }}"
+atuin_container_image_force_pull: "{{ atuin_container_image.endswith(':latest') }}"
+
+# Copied from gotosocial, dunno what it does or whether it works
+# A list of additional container networks that the container would be connected to.
+# The role does not create these networks, so make sure they already exist.
+# Use this to expose this container to a reverse proxy, which runs in a different container network.
+atuin_container_additional_networks: "{{ atuin_container_additional_networks_auto + atuin_container_additional_networks_custom }}"
+atuin_container_additional_networks_auto: []
+atuin_container_additional_networks_custom: []
 
 # Additional environment variables to pass to the atuin container.
 # You can use this to further influence the default configuration.
