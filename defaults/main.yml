@@ -2,7 +2,7 @@
 atuin_enabled: true
 atuin_identifier: atuin
 
-atuin_host: '0.0.0.0'
+atuin_hostname: ''
 
 atuin_database_name: atuin
 atuin_database_username: atuin
@@ -48,6 +48,47 @@ atuin_container_image_force_pull: "{{ atuin_container_image.endswith(':latest') 
 atuin_container_additional_networks: "{{ atuin_container_additional_networks_auto + atuin_container_additional_networks_custom }}"
 atuin_container_additional_networks_auto: []
 atuin_container_additional_networks_custom: []
+
+# atuin_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
+# See `roles/custom/atuin_atuin/templates/labels.j2` for details.
+#
+# To inject your own other container labels, see `atuin_container_labels_additional_labels`.
+atuin_container_labels_traefik_enabled: false
+atuin_container_labels_traefik_docker_network: ""
+atuin_container_labels_traefik_entrypoints: web-secure
+atuin_container_labels_traefik_priority: 0
+atuin_container_labels_traefik_tls: "{{ atuin_container_labels_traefik_entrypoints != 'web' }}"
+atuin_container_labels_traefik_tls_certResolver: default  # noqa var-naming
+
+# Controls which additional headers to attach to all HTTP requests.
+# To add your own custom request headers, use `atuin_container_labels_traefik_additional_response_headers_custom`
+atuin_container_labels_traefik_additional_request_headers: "{{ atuin_container_labels_traefik_additional_request_headers_auto | combine(atuin_container_labels_traefik_additional_request_headers_custom) }}"
+atuin_container_labels_traefik_additional_request_headers_auto: {}
+atuin_container_labels_traefik_additional_request_headers_custom: {}
+
+# Controls which additional headers to attach to all HTTP responses.
+# To add your own custom response headers, use `atuin_container_labels_traefik_additional_response_headers_custom`
+atuin_container_labels_traefik_additional_response_headers: "{{ atuin_container_labels_traefik_additional_response_headers_auto | combine(atuin_container_labels_traefik_additional_response_headers_custom) }}"
+atuin_container_labels_traefik_additional_response_headers_auto: |
+  {{
+    {}
+    | combine ({'X-XSS-Protection': atuin_http_header_xss_protection} if atuin_http_header_xss_protection else {})
+    | combine ({'X-Frame-Options': atuin_http_header_frame_options} if atuin_http_header_frame_options else {})
+    | combine ({'X-Content-Type-Options': atuin_http_header_content_type_options} if atuin_http_header_content_type_options else {})
+    | combine ({'Content-Security-Policy': atuin_http_header_content_security_policy} if atuin_http_header_content_security_policy else {})
+    | combine ({'Permission-Policy': atuin_http_header_content_permission_policy} if atuin_http_header_content_permission_policy else {})
+    | combine ({'Strict-Transport-Security': atuin_http_header_strict_transport_security} if atuin_http_header_strict_transport_security and atuin_container_labels_traefik_tls else {})
+  }}
+atuin_container_labels_traefik_additional_response_headers_custom: {}
+
+# atuin_container_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
+# See `roles/custom/collabora_online/templates/labels.j2` for details.
+#
+# Example:
+# atuin_container_labels_additional_labels: |
+#   my.label=1
+#   another.label="here"
+atuin_container_labels_additional_labels: ''
 
 # Additional environment variables to pass to the atuin container.
 # You can use this to further influence the default configuration.
