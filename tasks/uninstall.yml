@@ -1,25 +1,25 @@
 ---
 
-- name: Check existence of Gitea systemd service
+- name: Check existence of atuin systemd service
   ansible.builtin.stat:
-    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ gitea_identifier }}.service"
-  register: gitea_service_stat
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ atuin_identifier }}.service"
+  register: atuin_service_stat
 
-- when: gitea_service_stat.stat.exists | bool
+- when: atuin_service_stat.stat.exists | bool
   block:
-    - name: Ensure Gitea systemd service is stopped
+    - name: Ensure atuin service is stopped
       ansible.builtin.service:
-        name: "{{ gitea_identifier }}"
+        name: "{{ atuin_identifier }}"
         state: stopped
         enabled: false
         daemon_reload: true
 
-    - name: Ensure Gitea systemd service does not exists
+    - name: Ensure atuin service doesn't exist
       ansible.builtin.file:
-        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ gitea_identifier }}.service"
+        dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ atuin_identifier }}.service"
         state: absent
 
-    - name: Ensure Gitea path doesn't exist
+    - name: Ensure atuin base path is files deleted (make sure to delete node data)
       ansible.builtin.file:
-        path: "{{ gitea_base_path }}"
+        path: "{{ atuin_base_path }}"
         state: absent
