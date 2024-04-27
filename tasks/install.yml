@@ -1,46 +1,57 @@
 ---
 
-- name: Ensure Gitea paths exist
+- name: Ensure atuin path exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: "0750"
-    owner: "{{ gitea_uid }}"
-    group: "{{ gitea_gid }}"
+    mode: 0700
+    owner: "{{ atuin_uid }}"
+    group: "{{ atuin_gid }}"
   with_items:
-    - "{{ gitea_base_path }}"
-    - "{{ gitea_data_dir_path }}"
-    - "{{ gitea_config_dir_path }}"
+    - "{{ atuin_base_path }}"
+    - "{{ atuin_config_path }}"
 
-- name: Ensure Gitea support files created
+- name: Ensure atuin data path exists
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: 0755
+    owner: "{{ atuin_uid }}"
+    group: "{{ atuin_gid }}"
+  with_items:
+    - {path: "{{ atuin_data_path }}", when: true}
+
+
+- name: Ensure atuin support files created
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
-    dest: "{{ gitea_base_path }}/{{ item }}"
-    owner: "{{ gitea_uid }}"
-    group: "{{ gitea_gid }}"
+    # TODO it is base_path in gitea 
+    dest: "{{ atuin_config_path }}/{{ item }}"
+    owner: "{{ atuin_uid }}"
+    group: "{{ atuin_gid }}"
     mode: 0640
   with_items:
     - env
     - labels
 
-- name: Ensure Gitea container image is pulled
+- name: Ensure atuin container image is pulled
   community.docker.docker_image:
-    name: "{{ gitea_container_image }}"
+    name: "{{ atuin_container_image }}"
     source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
-    force_source: "{{ gitea_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
-    force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else gitea_container_image_force_pull }}"
+    # removed force_source part from gitea
   register: result
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
   until: result is not failed
 
-- name: Ensure Gitea container network is created
-  community.general.docker_network:
-    name: "{{ gitea_container_network }}"
+- name: Ensure atuin network is created in Docker
+  # TODO it's community.general here in gitea, dunno the difference
+  community.docker.docker_network:
+    name: "{{ atuin_container_network }}"
     driver: bridge
 
-- name: Ensure Gitea systemd service installed
+- name: Ensure atuin.service installed
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/gitea.service.j2"
-    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ gitea_identifier }}.service"
+    src: "{{ role_path }}/templates/systemd/atuin.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ atuin_identifier }}.service"
     mode: 0640
