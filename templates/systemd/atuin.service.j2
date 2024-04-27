@@ -1,0 +1,51 @@
+[Unit]
+Description=Docker Compose Atuin Server ({{ atuin_identifier }})
+{% for service in atuin_systemd_required_services_list %}
+Requires={{ service }}
+After={{ service }}
+{% endfor %}
+
+[Service]
+Type=simple
+# Where the docker-compose file is located
+# TODO dunno how to deal with this
+WorkingDirectory=/srv/atuin-server
+# original one was ExecStart=/usr/bin/docker compose up
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop --time={{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ atuin_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ atuin_identifier }} 2>/dev/null || true'
+
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
+                --rm \
+                --name={{ atuin_identifier }} \
+                --log-driver=none \
+                --user={{ atuin_uid }}:{{ atuin_gid }} \
+                --cap-drop=ALL \
+                {% if atuin_container_http_host_bind_port %}
+                -p {{ atuin_container_http_host_bind_port }}:{{ atuin_container_http_port }} \
+                {% endif %}
+                --label-file={{ atuin_config_path }}/labels \
+                --network={{ atuin_container_network }} \
+                --mount type=bind,src={{ atuin_data_path }},dst=/var/lib/postgresql/data \
+                --mount type=bind,src={{ atuin_config_path }},dst=/config \
+                --read-only \
+                --tmpfs=/tmp:rw,noexec,nosuid,size=100m \
+                --env-file={{ atuin_env_path }} \
+                {{ atuin_container_image }}
+
+{% for network in atuin_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ atuin_identifier }}
+{% endfor %}
+
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ atuin_identifier }}
+
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop --time={{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ atuin_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ atuin_identifier }} 2>/dev/null || true'
+TimeoutStartSec={{ atuin_timeout_start_sec }}
+Restart=always
+RestartSec=30
+SyslogIdentifier={{ atuin_identifier }}
+# This var left unmodified
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
