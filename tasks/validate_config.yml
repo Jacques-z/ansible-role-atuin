@@ -9,7 +9,7 @@
     - atuin_hostname
     - atuin_uid
     - atuin_gid
-    - atuin_database_hostname
+    - atuin_database_host
     - atuin_database_username
     - atuin_database_password
 
