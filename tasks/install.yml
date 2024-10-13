@@ -44,14 +44,6 @@
     group: "{{ gotosocial_gid }}"
     mode: 0640
 
-- name: Ensure the existence of config file
-  ansible.builtin.template:
-    src: "{{ role_path }}/templates/server.toml.j2"
-    dest: "{{ gotosocial_config_path }}/server.toml"
-    owner: "{{ gotosocial_uid }}"
-    group: "{{ gotosocial_gid }}"
-    mode: 0640
-
 - name: Ensure gotosocial container image is pulled
   community.docker.docker_image:
     name: "{{ gotosocial_container_image }}"

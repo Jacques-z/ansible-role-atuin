@@ -1,2 +1,2 @@
 ---
-gotosocial_users: "{{ gotosocial_users_auto + gotosocial_users_additional }}"
+# TODO: what do vars here do?
