@@ -1,70 +1,16 @@
 ---
-# Project source code URL: https://github.com/superseriousbusiness/gotosocial
+# Project source code URL: https://github.com/atuinsh/atuin
 gotosocial_enabled: true
 gotosocial_identifier: gotosocial
 
 gotosocial_hostname: ''
 
-# String. Domain to use when federating profiles. This is useful when you want your server to be at
-# eg., "gts.example.org", but you want the domain on accounts to be "example.org" because it looks better
-# or is just shorter/easier to remember.
+# Atuin doesn't provide option to enable HTTP Basic Authentication for Prometheus metrics endpoint.
+gotosocial_metrics_enable: false
+gotosocial_metrics_host: false
+gotosocial_metrics_port: false
 
-# DO NOT change this after your server has already run once, or you will break things!
-#
-# Please read the appropriate section of the installation guide before you go messing around with this setting. You most likely have to use
-# `gotosocial_container_labels_additional_labels` to set appropriate labels on the parent domain. Docs:
-# https://docs.gotosocial.org/en/latest/installation_guide/advanced/#can-i-host-my-instance-at-fediexampleorg-but-have-just-exampleorg-in-my-username
-gotosocial_account_domain: "{{ gotosocial_hostname }}"
-
-# This var holds the list of users that should be created automatically by playbooks/roles/group vars,
-# To add your own users for specific host, use `gotosocial_users_additional`
-# Example:
-# gotosocial_users_auto:
-# - username: admin
-#   initial_email: admin@example.com
-#   initial_password: password
-#   initial_type: admin
-# - username: user
-#   initial_email: admin@example.com
-#   initial_password: password
-#   initial_type: user
-gotosocial_users_auto: []
-# This var holds the list of users that should be created automatically by specific host (using host's vars.yml) instead of playbook/role/group vars
-# Example:
-# gotosocial_users_additional:
-# - username: rssbot
-#   initial_email: bots@example.com
-#   initial_password: password
-#   initial_type: user
-gotosocial_users_additional: []
-
-# List of string. BCP47 language tags to indicate preferred languages of users on this instance.
-#
-# If you provide these, you should provide these in order from most-preferred to least-preferred,
-# but note that leaving out a language from this array doesn't mean it can't be used on this instance,
-# it only means it won't be advertised as a preferred instance language.
-#
-# It is valid to provide no entries here; your instance will then have no particular preferred language.
-#
-# See here for commonly-used tags: https://en.wikipedia.org/wiki/IETF_language_tag#List_of_common_primary_language_subtags
-# See here for all current tags: https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
-#
-# Example:
-# gotosocial_instance_languages:
-# - "en"
-# - "de"
-gotosocial_instance_languages: []
-
-# https://docs.gotosocial.org/en/latest/advanced/metrics/
-gotosocial_metrics_enabled: false
-
-# Bool. Enable HTTP Basic Authentication for Prometheus metrics endpoint.
-# You also have to set gotosocial_metrics_auth_username gotosocial_metrics_auth_password
-gotosocial_metrics_auth_enabled: false
-gotosocial_metrics_auth_username: ""
-gotosocial_metrics_auth_password: ""
-
-
+# TODO: Left unmodified, but this seems to cause different user trouble. Maybe should chown
 gotosocial_uid: ''
 gotosocial_gid: ''
 
@@ -84,6 +30,7 @@ gotosocial_systemd_wanted_services_list_auto: []
 gotosocial_systemd_wanted_services_list_custom: []
 
 gotosocial_version: 18.3.0
+# TODO: 18.4.0 available
 
 gotosocial_container_image: "{{ gotosocial_container_image_registry_prefix }}atuinsh/atuin:{{ gotosocial_container_image_tag }}"
 gotosocial_container_image_registry_prefix: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/ghcr.io/
@@ -95,7 +42,8 @@ gotosocial_container_network: '{{ gotosocial_identifier }}'
 # The port number in the container
 gotosocial_container_http_port: 8888
 
-# Controls whether the gotosocial container exposes its HTTP port (as defined by `gotosocial_container_http_port`).
+# TODO: does this work?
+# Gotosocial uses to controls whether the gotosocial container exposes its HTTP port (as defined by `gotosocial_container_http_port`).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:8731"), or empty string to not expose.
 gotosocial_container_http_host_bind_port: ""
@@ -107,56 +55,32 @@ gotosocial_container_additional_networks: "{{ gotosocial_container_additional_ne
 gotosocial_container_additional_networks_auto: []
 gotosocial_container_additional_networks_custom: []
 
-gotosocial_database_hostname: ''
+gotosocial_database_hostname: '' # FIXIT: what's the usage?
 gotosocial_database_port: 5432
 gotosocial_database_name: gotosocial
 gotosocial_database_username: gotosocial
 gotosocial_database_password: PASSWD_HERE
+gotosocial_database_type: postgres
 # Use this to set the sslmode parameter of the SSL connection
 # By default, we expect a local container (without SSL), so attempting SSL connections is not necessary.
 gotosocial_database_sslmode: disable
+gotosocial_config_database_uri: |-
+  {{
+    ('postgresql://' + gotosocial_database_username + ':' + gotosocial_database_password + '@' + gotosocial_database_host + ':' + gotosocial_database_port | string + '/' + gotosocial_database_name + '?sslmode=' + gotosocial_database_sslmode)
+    if gotosocial_database_type == 'postgres'
+    else ''
+  }}
 
 
 # REGISTRATION
-gotosocial_accounts_registration_open: false
-gotosocial_accounts_reason_required: true
+gotosocial_accounts_open_registration: true
 
-# Configure the E-Mail address that GTS will use to inform you about reports, enable password resets and other activities
-# Not required but useful
-# Check out https://docs.gotosocial.org/en/latest/configuration/smtp/ for a configuration reference
-gotosocial_smtp_host: ''
-gotosocial_smtp_port: 587
-gotosocial_smtp_username: ''
-gotosocial_smtp_password: ''
-gotosocial_smtp_from: ''
-gotosocial_smtp_disclose_recipients: false
-
-# Will set GTS_TRUSTED_PROXIES
-# By default this is set to all private IPs (https://datatracker.ietf.org/doc/html/rfc1918#section-3)
-gotosocial_trusted_proxies: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-
-# Minimum amount of characters required as an image or video description.
-# Values >0 force a user to provide a media description
-gotosocial_media_description_min_chars: 0
-# Maximum amount of characters permitted in an image or video description.
-gotosocial_media_description_max_chars: 1500
-
-# Include the client IP in the log GTS log
-gotosocial_log_client_IP: true
-
-# Allow custom CSS: https://docs.gotosocial.org/en/latest/user_guide/custom_css/
-# Make sure you undestand the security implications when overwriting this setting: https://docs.gotosocial.org/en/latest/configuration/accounts/
-gotosocial_accounts_allow_custom_css: false
-
-# Additional environment variables to pass to the GoToSocial container.
+# Additional environment variables to pass to the atuin container.
 # You can use this to further influence the default configuration.
 #
 # Example:
 # gotosocial_environment_variables_extension: |
-#   GOTOSOCIAL_STORAGE_BACKEND=s3
-#   GOTOSOCIAL_STORAGE_S3_ENDPOINT=minio:9000
-#   GOTOSOCIAL_STORAGE_S3_BUCKET=something
-#   GOTOSOCIAL_STORAGE_S3_SECRET_KEY=verysecret
+#   ATUIN_HOST=127.0.0.1
 gotosocial_environment_variables_extension: ''
 
 # gotosocial_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
@@ -165,7 +89,7 @@ gotosocial_environment_variables_extension: ''
 # To inject your own other container labels, see `gotosocial_container_labels_additional_labels`.
 gotosocial_container_labels_traefik_enabled: false
 gotosocial_container_labels_traefik_docker_network: ""
-gotosocial_container_labels_traefik_entrypoints: web-secure
+gotosocial_container_labels_traefik_entrypoints: web-secure # FIXIT: don't set this option to web, will cause strange bug
 gotosocial_container_labels_traefik_priority: 0
 gotosocial_container_labels_traefik_tls: "{{ gotosocial_container_labels_traefik_entrypoints != 'web' }}"
 gotosocial_container_labels_traefik_tls_certResolver: default  # noqa var-naming
